@@ -1,63 +1,116 @@
-# Introduction
+# IOT 物联网平台
 
-This is a skeleton application using the Hyperf framework. This application is meant to be used as a starting place for those looking to get their feet wet with Hyperf Framework.
+一个基于 Hyperf + Vue 3 的物联网平台项目，当前包含 Web 管理端与后端 API（微信小程序端规划中）。
 
-# Requirements
+## 技术栈
 
-Hyperf has some requirements for the system environment, it can only run under Linux and Mac environment, but due to the development of Docker virtualization technology, Docker for Windows can also be used as the running environment under Windows.
+| 模块 | 技术 |
+|------|------|
+| 后端 | PHP 8.1+ / Hyperf 3.1 / Swoole |
+| 前端 | Vue 3 + Vuetify 3 + TypeScript + Vite |
+| 数据库 | MySQL 8.0 |
+| 缓存 | Redis 7 |
+| 部署 | Docker + docker-compose（nginx 托管前端） |
 
-The various versions of Dockerfile have been prepared for you in the [hyperf/hyperf-docker](https://github.com/hyperf/hyperf-docker) project, or directly based on the already built [hyperf/hyperf](https://hub.docker.com/r/hyperf/hyperf) Image to run.
+## 项目结构
 
-When you don't want to use Docker as the basis for your running environment, you need to make sure that your operating environment meets the following requirements:  
-
- - PHP >= 8.1
- - Any of the following network engines
-   - Swoole PHP extension >= 5.0，with `swoole.use_shortname` set to `Off` in your `php.ini`
-   - Swow PHP extension >= 1.3
- - JSON PHP extension
- - Pcntl PHP extension
- - OpenSSL PHP extension （If you need to use the HTTPS）
- - PDO PHP extension （If you need to use the MySQL Client）
- - Redis PHP extension （If you need to use the Redis Client）
- - Protobuf PHP extension （If you need to use the gRPC Server or Client）
-
-# Installation using Composer
-
-The easiest way to create a new Hyperf project is to use [Composer](https://getcomposer.org/). If you don't have it already installed, then please install as per [the documentation](https://getcomposer.org/download/).
-
-To create your new Hyperf project:
-
-```bash
-composer create-project hyperf/hyperf-skeleton path/to/install
+```
+IOT-Hyperf/
+├── backend/            # Hyperf 后端 API
+│   ├── app/            # 控制器、模型、异常处理等
+│   ├── config/         # 路由与组件配置
+│   └── public/         # 后端内置的简易监控页
+├── frontend/           # Vue 3 + Vuetify Web 管理端
+├── database/           # 数据库初始化脚本（首次启动自动执行）
+├── miniprogram/        # uni-app 微信小程序（规划中）
+├── deploy/             # 部署脚本（预留）
+├── docs/               # 项目文档（预留）
+└── docker-compose.yml  # 一键启动全部服务
 ```
 
-If your development environment is based on Docker you can use the official Composer image to create a new Hyperf project:
+## 快速开始
+
+### 方式一：Docker 一键启动（推荐）
+
+要求：已安装 Docker 与 docker-compose。
 
 ```bash
-docker run --rm -it -v $(pwd):/app composer create-project --ignore-platform-reqs hyperf/hyperf-skeleton path/to/install
+# 构建并启动所有服务
+docker-compose up -d --build
+
+# 查看服务状态
+docker-compose ps
 ```
 
-# Getting started
+启动后访问：
 
-Once installed, you can run the server immediately using the command below.
+- Web 管理端：http://localhost:8080
+- 后端 API：http://localhost:9501
+- MySQL：localhost:3306（用户 `iot` / 密码 `iot123456`，root 密码 `root123456`）
+- Redis：localhost:6379（密码 `redis123456`）
+
+首次启动会自动执行 `database/init.sql` 创建 `iot_platform` 数据库和 `device_data` 表。若之前启动过 MySQL 且数据卷已存在，需要先清理旧卷再启动：
 
 ```bash
-cd path/to/install
+docker-compose down -v
+docker-compose up -d --build
+```
+
+> `down -v` 会删除数据卷，仅在确认可以丢弃数据库数据时使用。
+
+### 方式二：本地开发
+
+后端（需要 PHP 8.1+ / Swoole 扩展）：
+
+```bash
+cd backend
+composer install
+cp .env.example .env   # 按需修改数据库/Redis 连接
 php bin/hyperf.php start
 ```
 
-Or if in a Docker based environment you can use the `docker-compose.yml` provided by the template:
+前端（需要 Node.js 18+）：
 
 ```bash
-cd path/to/install
-docker-compose up
+cd frontend
+npm install
+npm run dev
 ```
 
-This will start the cli-server on port `9501`, and bind it to all network interfaces. You can then visit the site at `http://localhost:9501/` which will bring up Hyperf default home page.
+前端开发服务器运行在 http://localhost:3000，已配置 `/api` 代理到 `http://localhost:9501`。
 
-## Hints
+## API 说明
 
-- A nice tip is to rename `hyperf-skeleton` of files like `composer.json` and `docker-compose.yml` to your actual project name.
-- Take a look at `config/routes.php` and `app/Controller/IndexController.php` to see an example of a HTTP entrypoint.
+所有接口统一返回 `{ "code": 200, "msg": "success", "data": ... }`，业务失败时 `code` 为 400/404 等。
 
-**Remember:** you can always replace the contents of this README.md file to something that fits your project description.
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/device/data` | 设备数据列表，可选 `?device_id=xxx` 筛选 |
+| POST | `/device/data` | 新增设备数据 |
+| PUT | `/device/data/{id}` | 修改设备数据（支持部分字段） |
+| DELETE | `/device/data/{id}` | 删除设备数据 |
+| POST | `/device/report` | 设备上报接口（设备端专用） |
+
+新增/修改参数：`device_id`（必填，≤64 字符）、`temp`（温度，数字）、`humidity`（湿度，数字）。
+
+## 部署到 Linux
+
+```bash
+# 1. 克隆项目
+git clone git@github.com:CCAramBAA/IOT-Hyperf.git
+cd IOT-Hyperf
+
+# 2. 构建并启动
+docker-compose up -d --build
+```
+
+访问地址同上：Web 管理端 `http://服务器IP:8080`，后端 API `http://服务器IP:9501`。
+
+## 开发进度
+
+- [x] 项目骨架搭建
+- [x] 数据库设计与初始化脚本
+- [x] 后端设备数据 CRUD 接口
+- [x] 前端管理端接入真实 API
+- [ ] 仪表盘真实统计
+- [ ] 微信小程序端

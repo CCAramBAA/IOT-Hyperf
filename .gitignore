@@ -1,16 +1,47 @@
+# IDE / Editor
+.idea/
+.vscode/
 .buildpath
 .settings/
 .project
-*.patch
-.idea/
-.git/
-runtime/
-vendor/
 .phpintel/
-.env
+
+# OS
 .DS_Store
-.phpunit*
-*.cache
-.vscode/
-/phpstan.neon
-/phpunit.xml
+Thumbs.db
+
+# Backend (Hyperf)
+backend/runtime/
+backend/vendor/
+backend/.env
+backend/phpstan.neon
+backend/phpunit.xml
+backend/*.cache
+backend/.phpunit*
+
+# Frontend (Vue/Vuetify)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.vite/
+
+# Mini Program (uni-app)
+miniprogram/node_modules/
+miniprogram/dist/
+miniprogram/unpackage/
+miniprogram/.env.local
+miniprogram/.env.*.local
+
+# Database
+database/*.sql.bak
+
+# Deploy
+deploy/.env
+
+# Git
+.git/
+*.patch

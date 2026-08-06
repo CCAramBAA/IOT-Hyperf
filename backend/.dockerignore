@@ -1,0 +1,8 @@
+.env
+.git
+runtime
+vendor
+test
+*.log
+.devcontainer
+.github

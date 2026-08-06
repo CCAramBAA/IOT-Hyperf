@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT温湿度监控平台</title>
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.12/dist/vuetify.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+
+  <!-- 先加载CDN全局库，不要加defer -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.12/dist/vuetify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <v-app>
+    <v-app-bar title="IoT温湿度监控平台"></v-app-bar>
+    <v-main>
+      <v-container>
+        <v-card class="my-4 pa-4">
+          <v-row align="center">
+            <v-col cols="4">
+              <v-text-field
+                v-model="queryParams.deviceId"
+                label="设备编号"
+                placeholder="例如 dev001"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="auto">
+              <v-btn color="primary" @click="fetchDeviceData">刷新数据</v-btn>
+            </v-col>
+          </v-row>
+        </v-card>
+
+        <v-card title="设备历史上报记录" class="my-4">
+          <v-table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>设备ID</th>
+                <th>温度(℃)</th>
+                <th>湿度(%)</th>
+                <th>上报时间</th>
+              </tr>
+            </thead>
+            <tbody>
+                <tr v-if="deviceDataList.length === 0">
+                    <td colspan="5" class="text-center">暂无设备数据，请点击刷新数据</td>
+                </tr>
+                <tr v‑else v-for="item in deviceDataList" :key="item.id">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.device_id }}</td>
+                    <td>{{ item.temp }}</td>
+                    <td>{{ item.humidity }}</td>
+                      <td>{{ item.created_at }}</td>
+                </tr>
+            </tbody>
+          </v-table>
+        </v-card>
+
+        <v-card title="温湿度时序曲线" class="my-4">
+          <div id="echart-container" style="height:400px;"></div>
+        </v-card>
+      </v-container>
+    </v-main>
+  </v-app>
+</div>
+
+<!-- defer：等待页面全部解析、上面CDN脚本执行完，再运行本地JS -->
+<script src="./js/api.js" defer></script>
+<script src="./js/chart.js" defer></script>
+<script src="./js/app.js" defer></script>
+</body>
+</html>
