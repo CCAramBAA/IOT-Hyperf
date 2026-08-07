@@ -29,13 +29,15 @@ class DeviceDataController extends AbstractController
             $query->where('device_id', $deviceId);
         }
 
-        $paginator = $query->orderByDesc('id')->paginate($pageSize, ['*'], 'page', $page);
+        // 手动分页：hyperf/paginator 未安装，paginate() 会报错
+        $total = (clone $query)->count();
+        $list = $query->orderByDesc('id')->forPage($page, $pageSize)->get();
 
         return $this->success([
-            'list' => $paginator->items(),
-            'total' => $paginator->total(),
-            'page' => $paginator->currentPage(),
-            'page_size' => $paginator->perPage(),
+            'list' => $list,
+            'total' => $total,
+            'page' => $page,
+            'page_size' => $pageSize,
         ]);
     }
 
