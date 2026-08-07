@@ -52,12 +52,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: 官方 Hyperf 镜像内运行 phpunit
         run: |
+          set +e
           docker run --rm \
             -v "$PWD/backend:/opt/www" \
             -w /opt/www \
             --entrypoint sh \
             hyperf/hyperf:8.3-alpine-v3.19-swoole \
-            -c "composer install --no-interaction --prefer-dist --no-progress --ignore-platform-reqs && vendor/bin/phpunit -c phpunit.xml.dist --colors=always"
+            -c "composer install --no-interaction --prefer-dist --no-progress --ignore-platform-reqs && vendor/bin/phpunit -c phpunit.xml.dist --colors=never" \
+            > /tmp/ci-phpunit.log 2>&1
+          CODE=$?
+          tail -n 120 /tmp/ci-phpunit.log
+          MSG=$(tail -n 120 /tmp/ci-phpunit.log | sed 's/%/%25/g' | tr '\n' '\r' | sed 's/\r/%0A/g')
+          echo "::error::$MSG"
+          exit $CODE
 
   integration:
     name: Docker 集成验收（建表 + CRUD + 前端）
