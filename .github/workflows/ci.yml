@@ -90,50 +90,71 @@ jobs:
         run: |
           docker compose exec -T mysql mysql -uiot -piot123456 iot_platform -e "SHOW TABLES;" | grep -q "device_data"
           docker compose exec -T mysql mysql -uiot -piot123456 iot_platform -e "DESCRIBE device_data;"
-      - name: 接口验收（增删改查 + 参数校验 + 404）
+      - name: 接口验收（登录 + 增删改查 + 参数校验 + 404）
         run: |
           set +e
           bash -x <<'EOF' > /tmp/ci-integration.log 2>&1
+          # 未登录访问受保护接口应返回 401
+          curl -s http://localhost:9501/device/data | grep -q '"code":401'
+
+          # 错误密码应返回 401
+          curl -s -X POST http://localhost:9501/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"wrong"}' | grep -q '"code":401'
+
+          # 登录
+          LOGIN=$(curl -fsS -X POST http://localhost:9501/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"admin123"}')
+          echo "login => $LOGIN"
+          TOKEN=$(echo "$LOGIN" | grep -o '"token":"[^"]*"' | head -n1 | cut -d'"' -f4)
+          test -n "$TOKEN" && echo "token ok"
+
           # 新增
           CREATE=$(curl -fsS -X POST http://localhost:9501/device/data \
             -H 'Content-Type: application/json' \
+            -H "Authorization: Bearer $TOKEN" \
             -d '{"device_id":"ci-dev001","temp":25.5,"humidity":60}')
           echo "create => $CREATE"
           ID=$(echo "$CREATE" | grep -o '"id":[0-9]*' | head -n1 | cut -d: -f2)
           test -n "$ID" && echo "id=$ID"
 
           # 列表（按设备筛选 + 分页）
-          curl -fsS "http://localhost:9501/device/data?device_id=ci-dev001&page=1&page_size=5" | grep -q '"list"'
-          curl -fsS "http://localhost:9501/device/data?device_id=ci-dev001&page=1&page_size=5" | grep -q '"total"'
+          curl -fsS -H "Authorization: Bearer $TOKEN" "http://localhost:9501/device/data?device_id=ci-dev001&page=1&page_size=5" | grep -q '"list"'
+          curl -fsS -H "Authorization: Bearer $TOKEN" "http://localhost:9501/device/data?device_id=ci-dev001&page=1&page_size=5" | grep -q '"total"'
 
           # 修改
-          curl -fsS -X PUT "http://localhost:9501/device/data/$ID" \
+          curl -fsS -X PUT -H "Authorization: Bearer $TOKEN" "http://localhost:9501/device/data/$ID" \
             -H 'Content-Type: application/json' \
             -d '{"temp":26.8}' | grep -q "26.8"
 
           # 参数校验失败应返回 code 400
           curl -fsS -X POST http://localhost:9501/device/data \
             -H 'Content-Type: application/json' \
+            -H "Authorization: Bearer $TOKEN" \
             -d '{}' | grep -q '"code":400'
 
           # 不存在的记录应返回 code 404
-          curl -fsS -X DELETE http://localhost:9501/device/data/999999 | grep -q '"code":404'
+          curl -fsS -X DELETE -H "Authorization: Bearer $TOKEN" http://localhost:9501/device/data/999999 | grep -q '"code":404'
 
           # 删除
-          curl -fsS -X DELETE "http://localhost:9501/device/data/$ID" | grep -q '"code":200'
+          curl -fsS -X DELETE -H "Authorization: Bearer $TOKEN" "http://localhost:9501/device/data/$ID" | grep -q '"code":200'
 
           # 统计接口（仪表盘）
-          curl -fsS http://localhost:9501/device/stats | grep -q '"device_count"'
+          curl -fsS -H "Authorization: Bearer $TOKEN" http://localhost:9501/device/stats | grep -q '"device_count"'
 
-          echo "CRUD 验收通过"
+          # 经 nginx 代理：未登录 401、带 token 200
+          curl -s http://localhost:8080/api/device/data | grep -q '"code":401'
+          curl -fsS -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/device/data | grep -q '"code":200'
+
+          echo "接口验收通过"
           EOF
           CODE=$?
-          tail -n 60 /tmp/ci-integration.log
-          MSG=$(tail -n 60 /tmp/ci-integration.log | sed 's/%/%25/g' | tr '\n' '\r' | sed 's/\r/%0A/g')
+          tail -n 80 /tmp/ci-integration.log
+          MSG=$(tail -n 80 /tmp/ci-integration.log | sed 's/%/%25/g' | tr '\n' '\r' | sed 's/\r/%0A/g')
           echo "::error::$MSG"
           exit $CODE
-      - name: 验证前端页面与 /api 代理
+      - name: 验证前端页面
         run: |
           curl -fsS http://localhost:8080/ | grep -q '<div id="app">'
-          curl -fsS http://localhost:8080/api/device/data | grep -q '"code":200'
           echo "前端验收通过"

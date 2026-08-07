@@ -7,6 +7,7 @@
       <v-spacer></v-spacer>
       <v-btn icon="mdi-bell-outline" variant="text"></v-btn>
       <v-btn icon="mdi-account-circle" variant="text"></v-btn>
+      <v-btn icon="mdi-logout" variant="text" title="退出登录" @click="logout"></v-btn>
     </v-app-bar>
 
     <!-- 侧边栏 -->
@@ -39,11 +40,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { clearToken } from '@/api/request'
 
 const appStore = useAppStore()
 const route = useRoute()
+const router = useRouter()
 
 const drawer = computed({
   get: () => appStore.drawer,
@@ -56,6 +59,11 @@ const currentTitle = computed(() => {
 
 function toggleDrawer() {
   appStore.toggleDrawer()
+}
+
+function logout() {
+  clearToken()
+  router.push('/login')
 }
 
 const menuItems = [

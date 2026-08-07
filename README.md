@@ -49,6 +49,8 @@ docker-compose ps
 - MySQL：localhost:3306（用户 `iot` / 密码 `iot123456`，root 密码 `root123456`）
 - Redis：localhost:6379（密码 `redis123456`）
 
+默认管理员账号：`admin` / `admin123`（首次启动自动创建，**上线前务必修改密码**）。
+
 首次启动会自动执行 `database/init.sql` 创建 `iot_platform` 数据库和 `device_data` 表。若之前启动过 MySQL 且数据卷已存在，需要先清理旧卷再启动：
 
 ```bash
@@ -85,12 +87,15 @@ npm run dev
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
+| POST | `/auth/login` | 登录，传入 `{username, password}`，返回 JWT |
 | GET | `/device/data` | 设备数据列表（支持 `?device_id=xxx&page=1&page_size=10`，返回 `{list,total,page,page_size}`） |
 | POST | `/device/data` | 新增设备数据 |
 | PUT | `/device/data/{id}` | 修改设备数据（支持部分字段） |
 | DELETE | `/device/data/{id}` | 删除设备数据 |
 | GET | `/device/stats` | 平台统计（设备数/24h活跃/今日数据/总量） |
 | POST | `/device/report` | 设备上报接口（设备端专用） |
+
+除 `/auth/login`、`/device/report` 外的接口都需要登录：请求头带 `Authorization: Bearer <token>`。JWT 密钥通过环境变量 `JWT_SECRET` 配置。
 
 新增/修改参数：`device_id`（必填，≤64 字符）、`temp`（温度，数字）、`humidity`（湿度，数字）。
 
@@ -115,4 +120,5 @@ docker-compose up -d --build
 - [x] 前端管理端接入真实 API
 - [x] 自动化构建与集成验收（GitHub Actions CI）
 - [x] 仪表盘真实统计
+- [x] 登录鉴权（JWT）
 - [ ] 微信小程序端

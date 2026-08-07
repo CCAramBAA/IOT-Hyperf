@@ -34,6 +34,11 @@ class ErrorCode extends AbstractConstants
     public const NOT_FOUND = 404;
 
     /**
+     * @Message("未登录或登录已过期")
+     */
+    public const UNAUTHORIZED = 401;
+
+    /**
      * @Message("服务器内部错误")
      */
     public const SERVER_ERROR = 500;

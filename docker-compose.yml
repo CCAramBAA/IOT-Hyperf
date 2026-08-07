@@ -57,6 +57,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_AUTH=redis123456
+      - JWT_SECRET=iot-platform-dev-secret-change-me
     depends_on:
       mysql:
         condition: service_healthy

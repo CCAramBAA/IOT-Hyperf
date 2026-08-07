@@ -30,6 +30,24 @@ CREATE TABLE IF NOT EXISTS device_data (
   COLLATE = utf8mb4_unicode_ci
   COMMENT = '设备上报数据表';
 
+-- 平台用户表（管理端登录）
+CREATE TABLE IF NOT EXISTS users (
+  id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  username      VARCHAR(64)     NOT NULL COMMENT '用户名',
+  password_hash CHAR(64)        NOT NULL COMMENT '密码哈希：SHA256(密码+盐)',
+  password_salt VARCHAR(32)     NOT NULL COMMENT '密码盐',
+  created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_username (username)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '平台用户表';
+
+-- 默认管理员：admin / admin123（仅首次初始化时插入，上线前请修改密码或删除该账号）
+INSERT IGNORE INTO users (username, password_hash, password_salt)
+VALUES ('admin', SHA2(CONCAT('admin123', 'iot-salt-2026'), 256), 'iot-salt-2026');
+
 -- =====================================================
 -- 可选：演示数据（开发阶段需要页面有初始数据时，取消注释即可）
 -- =====================================================
