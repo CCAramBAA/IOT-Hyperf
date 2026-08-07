@@ -61,8 +61,11 @@ jobs:
             -c "composer install --no-interaction --prefer-dist --no-progress --ignore-platform-reqs && vendor/bin/phpunit -c phpunit.xml.dist --colors=never" \
             > /tmp/ci-phpunit.log 2>&1
           CODE=$?
-          tail -n 120 /tmp/ci-phpunit.log
-          MSG=$(tail -n 120 /tmp/ci-phpunit.log | sed 's/%/%25/g' | tr '\n' '\r' | sed 's/\r/%0A/g')
+          echo "=== 末尾 30 行 ==="
+          tail -n 30 /tmp/ci-phpunit.log
+          echo "=== 错误关键字 ==="
+          grep -nE 'error|Error|FAIL|Fatal|Exception|failed|not found|exit code' /tmp/ci-phpunit.log | tail -n 30
+          MSG=$( { tail -n 30 /tmp/ci-phpunit.log; grep -nE 'error|Error|FAIL|Fatal|Exception|failed|not found|exit code' /tmp/ci-phpunit.log | tail -n 30; } | sed 's/%/%25/g' | tr '\n' '\r' | sed 's/\r/%0A/g' )
           echo "::error::$MSG"
           exit $CODE
 
