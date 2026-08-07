@@ -89,6 +89,7 @@ npm run dev
 | POST | `/device/data` | 新增设备数据 |
 | PUT | `/device/data/{id}` | 修改设备数据（支持部分字段） |
 | DELETE | `/device/data/{id}` | 删除设备数据 |
+| GET | `/device/stats` | 平台统计（设备数/24h活跃/今日数据/总量） |
 | POST | `/device/report` | 设备上报接口（设备端专用） |
 
 新增/修改参数：`device_id`（必填，≤64 字符）、`temp`（温度，数字）、`humidity`（湿度，数字）。
@@ -113,5 +114,5 @@ docker-compose up -d --build
 - [x] 后端设备数据 CRUD 接口
 - [x] 前端管理端接入真实 API
 - [x] 自动化构建与集成验收（GitHub Actions CI）
-- [ ] 仪表盘真实统计
+- [x] 仪表盘真实统计
 - [ ] 微信小程序端

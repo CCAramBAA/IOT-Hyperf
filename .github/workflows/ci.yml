@@ -119,6 +119,9 @@ jobs:
           # 删除
           curl -fsS -X DELETE "http://localhost:9501/device/data/$ID" | grep -q '"code":200'
 
+          # 统计接口（仪表盘）
+          curl -fsS http://localhost:9501/device/stats | grep -q '"device_count"'
+
           echo "CRUD 验收通过"
       - name: 验证前端页面与 /api 代理
         run: |

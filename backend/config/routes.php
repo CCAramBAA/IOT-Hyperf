@@ -13,6 +13,8 @@ Router::get('/device/data', [DeviceDataController::class, 'index']);
 Router::post('/device/data', [DeviceDataController::class, 'store']);
 Router::put('/device/data/{id}', [DeviceDataController::class, 'update']);
 Router::delete('/device/data/{id}', [DeviceDataController::class, 'delete']);
+// 平台统计接口（仪表盘）
+Router::get('/device/stats', [DeviceDataController::class, 'stats']);
 
 Router::get('/', function () {
     return ['method' => 'GET', 'message' => 'Hello Hyperf.'];

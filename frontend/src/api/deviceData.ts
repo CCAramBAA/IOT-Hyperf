@@ -15,11 +15,24 @@ export interface DeviceDataPayload {
   humidity?: number | null
 }
 
+export interface DeviceStats {
+  device_count: number
+  active_24h: number
+  today_count: number
+  total_count: number
+  latest_time: string | null
+}
+
 // 列表查询，可选按设备ID筛选
 export function fetchDeviceData(deviceId?: string) {
   return request.get<ApiResponse<DeviceDataItem[]>>('/device/data', {
     params: deviceId ? { device_id: deviceId } : undefined,
   })
+}
+
+// 平台统计（仪表盘）
+export function fetchDeviceStats() {
+  return request.get<ApiResponse<DeviceStats>>('/device/stats')
 }
 
 // 新增

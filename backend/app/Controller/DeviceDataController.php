@@ -33,6 +33,27 @@ class DeviceDataController extends AbstractController
     }
 
     /**
+     * 平台统计数据（仪表盘用）。
+     */
+    public function stats(): array
+    {
+        $yesterday = date('Y-m-d H:i:s', time() - 86400);
+
+        return $this->success([
+            'device_count' => (int) DeviceData::query()->distinct()->count('device_id'),
+            'active_24h' => (int) DeviceData::query()
+                ->where('created_at', '>=', $yesterday)
+                ->distinct()
+                ->count('device_id'),
+            'today_count' => (int) DeviceData::query()
+                ->where('created_at', '>=', date('Y-m-d 00:00:00'))
+                ->count(),
+            'total_count' => (int) DeviceData::query()->count(),
+            'latest_time' => DeviceData::query()->max('created_at'),
+        ]);
+    }
+
+    /**
      * 新增设备数据。
      */
     public function store(): array
