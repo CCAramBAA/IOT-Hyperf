@@ -100,8 +100,9 @@ jobs:
           ID=$(echo "$CREATE" | grep -o '"id":[0-9]*' | head -n1 | cut -d: -f2)
           test -n "$ID" && echo "id=$ID"
 
-          # 列表（按设备筛选）
-          curl -fsS "http://localhost:9501/device/data?device_id=ci-dev001" | grep -q "ci-dev001"
+          # 列表（按设备筛选 + 分页）
+          curl -fsS "http://localhost:9501/device/data?device_id=ci-dev001&page=1&page_size=5" | grep -q '"list"'
+          curl -fsS "http://localhost:9501/device/data?device_id=ci-dev001&page=1&page_size=5" | grep -q '"total"'
 
           # 修改
           curl -fsS -X PUT "http://localhost:9501/device/data/$ID" \

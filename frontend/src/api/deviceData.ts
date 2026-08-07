@@ -23,10 +23,21 @@ export interface DeviceStats {
   latest_time: string | null
 }
 
-// 列表查询，可选按设备ID筛选
-export function fetchDeviceData(deviceId?: string) {
-  return request.get<ApiResponse<DeviceDataItem[]>>('/device/data', {
-    params: deviceId ? { device_id: deviceId } : undefined,
+export interface DeviceDataPage {
+  list: DeviceDataItem[]
+  total: number
+  page: number
+  page_size: number
+}
+
+// 列表查询：支持按设备ID筛选 + 分页
+export function fetchDeviceData(deviceId?: string, page = 1, pageSize = 10) {
+  return request.get<ApiResponse<DeviceDataPage>>('/device/data', {
+    params: {
+      page,
+      page_size: pageSize,
+      ...(deviceId ? { device_id: deviceId } : {}),
+    },
   })
 }
 

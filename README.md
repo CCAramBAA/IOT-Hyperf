@@ -85,7 +85,7 @@ npm run dev
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/device/data` | 设备数据列表，可选 `?device_id=xxx` 筛选 |
+| GET | `/device/data` | 设备数据列表（支持 `?device_id=xxx&page=1&page_size=10`，返回 `{list,total,page,page_size}`） |
 | POST | `/device/data` | 新增设备数据 |
 | PUT | `/device/data/{id}` | 修改设备数据（支持部分字段） |
 | DELETE | `/device/data/{id}` | 删除设备数据 |

@@ -30,10 +30,22 @@
             density="compact"
             hide-details
             class="max-w-64"
-            @keyup.enter="loadData"
+            @keyup.enter="doSearch"
           ></v-text-field>
-          <v-btn color="primary" variant="tonal" @click="loadData">查询</v-btn>
+          <v-btn color="primary" variant="tonal" @click="doSearch">查询</v-btn>
           <v-btn variant="text" @click="resetSearch">重置</v-btn>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="itemsPerPage"
+            :items="[10, 20, 50]"
+            label="每页"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="page-size-select"
+            style="width: 100px"
+            @update:model-value="onPageSizeChange"
+          ></v-select>
         </div>
       </v-card-text>
     </v-card>
@@ -44,7 +56,7 @@
         :headers="headers"
         :items="items"
         :loading="loading"
-        :items-per-page="10"
+        :items-per-page="Math.max(items.length, 1)"
         class="elevation-1"
       >
         <template #item.actions="{ item }">
@@ -55,6 +67,17 @@
           <span>暂无数据，点击右上角「新增数据」添加</span>
         </template>
       </v-data-table>
+
+      <!-- 分页 -->
+      <div class="d-flex align-center justify-end pa-4 ga-4">
+        <span class="text-body-2 text-medium-emphasis">共 {{ total }} 条</span>
+        <v-pagination
+          v-model="page"
+          :length="totalPages"
+          :total-visible="7"
+          @update:model-value="loadData"
+        ></v-pagination>
+      </div>
     </v-card>
 
     <!-- 新增/编辑对话框 -->
@@ -111,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   fetchDeviceData,
   createDeviceData,
@@ -131,6 +154,9 @@ const headers = [
 ]
 
 const items = ref<DeviceDataItem[]>([])
+const total = ref(0)
+const page = ref(1)
+const itemsPerPage = ref(10)
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
@@ -149,13 +175,16 @@ const formData = ref({
   humidity: null as number | null,
 })
 
-// 从后端加载列表
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / itemsPerPage.value)))
+
+// 从后端加载列表（服务端分页）
 async function loadData() {
   loading.value = true
   errorMsg.value = ''
   try {
-    const res = await fetchDeviceData(search.value.trim() || undefined)
-    items.value = res.data.data
+    const res = await fetchDeviceData(search.value.trim() || undefined, page.value, itemsPerPage.value)
+    items.value = res.data.data.list
+    total.value = res.data.data.total
   } catch (e) {
     errorMsg.value = (e as Error).message || '加载数据失败'
   } finally {
@@ -163,8 +192,18 @@ async function loadData() {
   }
 }
 
+function doSearch() {
+  page.value = 1
+  loadData()
+}
+
 function resetSearch() {
   search.value = ''
+  doSearch()
+}
+
+function onPageSizeChange() {
+  page.value = 1
   loadData()
 }
 
@@ -226,6 +265,10 @@ async function confirmDelete() {
   try {
     await deleteDeviceData(currentItem.value.id)
     deleteDialogVisible.value = false
+    // 删除的是当前页最后一条时，回退一页
+    if (items.value.length === 1 && page.value > 1) {
+      page.value -= 1
+    }
     await loadData()
   } catch (e) {
     errorMsg.value = (e as Error).message || '删除失败'

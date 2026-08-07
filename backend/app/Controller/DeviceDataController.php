@@ -21,15 +21,22 @@ class DeviceDataController extends AbstractController
     public function index(): array
     {
         $deviceId = (string) $this->request->query('device_id', '');
+        $page = max(1, (int) $this->request->query('page', 1));
+        $pageSize = min(100, max(1, (int) $this->request->query('page_size', 10)));
 
         $query = DeviceData::query();
         if ($deviceId !== '') {
             $query->where('device_id', $deviceId);
         }
 
-        $list = $query->orderByDesc('id')->get();
+        $paginator = $query->orderByDesc('id')->paginate($pageSize, ['*'], 'page', $page);
 
-        return $this->success($list);
+        return $this->success([
+            'list' => $paginator->items(),
+            'total' => $paginator->total(),
+            'page' => $paginator->currentPage(),
+            'page_size' => $paginator->perPage(),
+        ]);
     }
 
     /**
