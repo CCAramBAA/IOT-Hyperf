@@ -112,5 +112,6 @@ docker-compose up -d --build
 - [x] 数据库设计与初始化脚本
 - [x] 后端设备数据 CRUD 接口
 - [x] 前端管理端接入真实 API
+- [x] 自动化构建与集成验收（GitHub Actions CI）
 - [ ] 仪表盘真实统计
 - [ ] 微信小程序端

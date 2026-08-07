@@ -57,7 +57,7 @@ jobs:
             -w /opt/www \
             --entrypoint sh \
             hyperf/hyperf:8.3-alpine-v3.19-swoole \
-            -c "composer install --no-interaction --prefer-dist --no-progress && composer test"
+            -c "composer install --no-interaction --prefer-dist --no-progress --ignore-platform-reqs && vendor/bin/phpunit -c phpunit.xml.dist --colors=always"
 
   integration:
     name: Docker 集成验收（建表 + CRUD + 前端）
