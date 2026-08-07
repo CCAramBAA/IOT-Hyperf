@@ -2,6 +2,8 @@
 
 一个基于 Hyperf + Vue 3 的物联网平台项目，当前包含 Web 管理端与后端 API（微信小程序端规划中）。
 
+![CI](https://github.com/CCAramBAA/IOT-Hyperf/actions/workflows/ci.yml/badge.svg)
+
 ## 技术栈
 
 | 模块 | 技术 |
@@ -28,6 +30,15 @@ IOT-Hyperf/
 └── docker-compose.yml  # 一键启动全部服务
 ```
 
+## 已实现功能
+
+- 设备数据管理：表格增删改查（后端 CRUD 接口 + Vue 管理端）
+- 数据查询：按设备 ID 筛选 + 服务端分页（每页 10/20/50 可切换）
+- 仪表盘统计：设备总数 / 近 24h 活跃设备 / 今日数据 / 数据总量
+- 登录鉴权：JWT 登录（默认账号 `admin` / `admin123`），受保护接口需 Bearer Token
+- 设备上报接口：`POST /device/report`（设备端专用，无需登录）
+- CI 自动验收：push 后自动构建前端、运行后端测试、Docker 集成验收（建表 + 登录 + CRUD + 代理）
+
 ## 快速开始
 
 ### 方式一：Docker 一键启动（推荐）
@@ -51,7 +62,7 @@ docker-compose ps
 
 默认管理员账号：`admin` / `admin123`（首次启动自动创建，**上线前务必修改密码**）。
 
-首次启动会自动执行 `database/init.sql` 创建 `iot_platform` 数据库和 `device_data` 表。若之前启动过 MySQL 且数据卷已存在，需要先清理旧卷再启动：
+首次启动会自动执行 `database/init.sql` 创建 `iot_platform` 数据库、`device_data` 设备数据表和 `users` 用户表（含默认管理员）。若之前启动过 MySQL 且数据卷已存在，需要先清理旧卷再启动：
 
 ```bash
 docker-compose down -v
@@ -111,6 +122,12 @@ docker-compose up -d --build
 ```
 
 访问地址同上：Web 管理端 `http://服务器IP:8080`，后端 API `http://服务器IP:9501`。
+
+安全提醒：
+
+- 上线前修改默认管理员密码，或用强随机值覆盖 `JWT_SECRET` 环境变量
+- 放行防火墙端口 `8080` / `9501`（云服务器还要在安全组中配置）
+- 定期备份 MySQL 数据卷
 
 ## 开发进度
 
