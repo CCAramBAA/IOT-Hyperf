@@ -92,6 +92,8 @@ jobs:
           docker compose exec -T mysql mysql -uiot -piot123456 iot_platform -e "DESCRIBE device_data;"
       - name: 接口验收（增删改查 + 参数校验 + 404）
         run: |
+          set +e
+          bash -x <<'EOF' > /tmp/ci-integration.log 2>&1
           # 新增
           CREATE=$(curl -fsS -X POST http://localhost:9501/device/data \
             -H 'Content-Type: application/json' \
@@ -124,6 +126,12 @@ jobs:
           curl -fsS http://localhost:9501/device/stats | grep -q '"device_count"'
 
           echo "CRUD 验收通过"
+          EOF
+          CODE=$?
+          tail -n 60 /tmp/ci-integration.log
+          MSG=$(tail -n 60 /tmp/ci-integration.log | sed 's/%/%25/g' | tr '\n' '\r' | sed 's/\r/%0A/g')
+          echo "::error::$MSG"
+          exit $CODE
       - name: 验证前端页面与 /api 代理
         run: |
           curl -fsS http://localhost:8080/ | grep -q '<div id="app">'
